@@ -1,0 +1,5 @@
+kz\proctoring\integration\ApplicationIntegrationTest.class
+kz\proctoring\service\SessionServiceTest.class
+kz\proctoring\service\ExamServiceTest.class
+kz\proctoring\security\JwtServiceTest.class
+kz\proctoring\integration\AuthIntegrationTest.class
