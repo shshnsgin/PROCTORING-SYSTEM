@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: proctoring-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: proctoring-backend
+  template:
+    metadata:
+      labels:
+        app: proctoring-backend
+    spec:
+      containers:
+        - name: backend
+          image: proctoring-system:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: proctoring-secrets
+                  key: db-url
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: proctoring-secrets
+                  key: db-username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: proctoring-secrets
+                  key: db-password
+            - name: REDIS_HOST
+              value: redis-service
+            - name: KAFKA_BOOTSTRAP
+              value: kafka-service:9092
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: proctoring-secrets
+                  key: jwt-secret
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 20
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: proctoring-service
+spec:
+  selector:
+    app: proctoring-backend
+  ports:
+    - port: 80
+      targetPort: 8080
+  type: LoadBalancer
